@@ -25,7 +25,8 @@ function displayCDs(cds) {
   app.innerHTML = cds
     .map(
       (row) => `
-    <div class="cdCard" onclick="openEditModal(${row.id}, '${row.album.replace(/'/g, "\\'")}', '${row.artist.replace(/'/g, "\\'")}', ${row.year}, '${row.location.replace(/'/g, "\\'")}', '${row.position.replace(/'/g, "\\'")}')">
+    <div class="cdCard" id="cdCard-${row.id}" onclick="openEditModal(${row.id}, '${row.album.replace(/'/g, "\\'")}', '${row.artist.replace(/'/g, "\\'")}', ${row.year}, '${row.location.replace(/'/g, "\\'")}', '${row.position.replace(/'/g, "\\'")}')">
+      <img id="albumCover-${row.id}" class="albumCover" alt"Album cover for ${row.album}" />
       <p><strong>Album:</strong> ${row.album}</p>
       <p><strong>Artist:</strong> ${row.artist}</p>
       <p><strong>Year:</strong> ${row.year}</p>
@@ -33,6 +34,8 @@ function displayCDs(cds) {
   `
     )
     .join('');
+
+    cds.forEach((cd) => loadAlbumCover(cd.album, cd.artist, cd.id));
 }
 
 function filterCDs(cds, filter) {
@@ -218,3 +221,30 @@ document.getElementById('deleteCDButton').addEventListener('click', () => {
     })
     .catch((error) => console.error('Error deleting CD:', error));
 });
+
+function loadAlbumCover(album, artist, cardId) {
+  window.electronAPI.getEnv('LASTFM_API_KEY').then((apiKey) => {
+    fetch(
+      `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${apiKey}&artist=${encodeURIComponent(
+        artist
+      )}&album=${encodeURIComponent(album)}&format=json`
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        const albumInfo = data.album;
+
+        if (albumInfo) {
+          const albumImage =
+            albumInfo.image.find((img) => img.size === 'mega')?.['#text'] || '';
+          const albumCoverElement = document.getElementById(`albumCover-${cardId}`);
+          if (albumCoverElement) {
+            albumCoverElement.src = albumImage;
+            albumCoverElement.alt = `Album cover for ${album}`;
+          }
+        }
+      })
+      .catch((error) => {
+        console.error(`Error fetching album cover for ${album}:`, error);
+      });
+  });
+}
