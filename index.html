@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Dosis:wght@200..800&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>CDDB</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="font-audiowide">
+    <div id="app">
+        <h1>CDDB</h1>
+        <input id="searchField" type="text" placeholder="Search">
+        <select id="sortOptions">
+            <option value="artist-asc" selected>Artist (Ascending, Default)</option>
+            <option value="artist-desc">Artist (Descending)</option>
+            <option value="year-asc">Year (Ascending)</option>
+            <option value="year-desc">Year (Descending)</option>
+            <option value="album-asc">Album (Ascending)</option>
+            <option value="album-desc">Album (Descending)</option>
+          </select>
+        <button id="openAddModal">&plus;</button>
+    </div>
+    <div id="cdList"></div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+          <span id="closeAddModal" class="close">&times;</span>
+          <h2>Add New CD</h2>
+          <form id="addCDForm">
+            <label for="newAlbum">Album:</label>
+            <input type="text" id="newAlbum" placeholder="Album" required />
+            <label for="newArtist">Artist:</label>
+            <input type="text" id="newArtist" placeholder="Artist" required />
+            <label for="newYear">Year:</label>
+            <input type="number" id="newYear" placeholder="Year" required />
+            <label for="newLocation">Location:</label>
+            <input type="text" id="newLocation" placeholder="Location" required />
+            <label for="newPosition">Position:</label>
+            <input type="text" id="newPosition" placeholder="Position" required />
+            <button type="submit">Add CD</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="editModal" class="modal">
+        <div class="modal-content">
+          <span id="closeModal" class="close">&times;</span>
+          <div id="cdInfoSection">
+            <h2>CD Info</h2>
+            <p><strong>Album:</strong> <span id="infoAlbum"></span></p>
+            <p><strong>Artist:</strong> <span id="infoArtist"></span></p>
+            <p><strong>Year:</strong> <span id="infoYear"></span></p>
+            <p><strong>Location:</strong> <span id="infoLocation"></span></p>
+            <p><strong>Position:</strong> <span id="infoPosition"></span></p>
+            <p><strong>Additional Info:</strong> <span id="infoApiData"></span></p>
+            <button id="editButton">Edit</button>
+          </div>
+          <div id="cdEditSection" style="display: none;">
+            <h2>Edit CD</h2>
+            <form id="editCDForm">
+              <input type="hidden" id="editId" />
+              <label for="editAlbum">Album:</label>
+              <input type="text" id="editAlbum" required />
+              <label for="editArtist">Artist:</label>
+              <input type="text" id="editArtist" required />
+              <label for="editYear">Year:</label>
+              <input type="number" id="editYear" required />
+              <label for="editLocation">Location:</label>
+              <input type="text" id="editLocation" required />
+              <label for="editPosition">Position:</label>
+              <input type="text" id="editPosition" required />
+              <button type="submit">Save Changes</button>
+              <button type="button" id="deleteCDButton">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      
+    <script src="./renderer.js"></script>
+</body>
+</html>
