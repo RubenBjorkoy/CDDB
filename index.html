@@ -12,8 +12,12 @@
 <body class="font-audiowide">
     <div id="app">
         <h1>CDDB</h1>
-        <input id="searchField" type="text" placeholder="Search">
-        <select id="sortOptions">
+        <div id="searchContainer">
+          <input id="searchField" type="text" placeholder="Search">
+          <button id="menuToggle" class="menu-toggle">☰ Filters</button>
+        </div>
+        <div id="dropdownMenu" class="menu-content">
+          <select id="sortOptions">
             <option value="artist-asc" selected>Artist (Ascending, Default)</option>
             <option value="artist-desc">Artist (Descending)</option>
             <option value="year-asc">Year (Ascending)</option>
@@ -21,9 +25,19 @@
             <option value="album-asc">Album (Ascending)</option>
             <option value="album-desc">Album (Descending)</option>
           </select>
+          <select id="viewMode">
+            <option value="list" selected>List View</option>
+            <option value="cards">Cards View</option>
+          </select>
+          <select id="iconSize">
+            <option value="small">Small Icons</option>
+            <option value="medium" selected>Medium Icons</option>
+            <option value="large">Large Icons</option>
+          </select>
+        </div>
         <button id="openAddModal">&plus;</button>
     </div>
-    <div id="cdList"></div>
+    <div id="cdList" class="listView"></div>
 
     <div id="addModal" class="modal">
         <div class="modal-content">

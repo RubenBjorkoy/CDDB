@@ -1,3 +1,12 @@
+window.addEventListener('DOMContentLoaded', () => {
+  const viewMode = document.getElementById('viewMode').value;
+  const iconSizeDropdown = document.getElementById('iconSize');
+
+  if (viewMode === 'list') {
+    iconSizeDropdown.style.display = 'none';
+  }
+});
+
 let allCDs = [];
 let currentSortBy = 'artist';
 let currentAscending = true;
@@ -26,16 +35,18 @@ function displayCDs(cds) {
     .map(
       (row) => `
     <div class="cdCard" id="cdCard-${row.id}" onclick="openEditModal(${row.id}, '${row.album.replace(/'/g, "\\'")}', '${row.artist.replace(/'/g, "\\'")}', ${row.year}, '${row.location.replace(/'/g, "\\'")}', '${row.position.replace(/'/g, "\\'")}')">
-      <img id="albumCover-${row.id}" class="albumCover" alt"Album cover for ${row.album}" />
-      <p><strong>Album:</strong> ${row.album}</p>
-      <p><strong>Artist:</strong> ${row.artist}</p>
-      <p><strong>Year:</strong> ${row.year}</p>
+      <img id="albumCover-${row.id}" class="albumCover" alt="Album cover for ${row.album}" />
+      <div>
+        <p class="cdCardAlbum"><strong>${row.album}</strong></p>
+        <p class="cdCardArtist">${row.artist}</p>
+      </div>
+      <p class="cdCardYear">${row.year}</p>
     </div>
   `
     )
     .join('');
 
-    cds.forEach((cd) => loadAlbumCover(cd.album, cd.artist, cd.id));
+  cds.forEach((cd) => loadAlbumCover(cd.album, cd.artist, cd.id));
 }
 
 function filterCDs(cds, filter) {
@@ -248,3 +259,51 @@ function loadAlbumCover(album, artist, cardId) {
       });
   });
 }
+
+document.getElementById('iconSize').addEventListener('change', (e) => {
+  const iconSize = e.target.value;
+  const cdCards = document.querySelectorAll('.cdCard');
+  const albumCovers = document.querySelectorAll('.albumCover');
+
+  albumCovers.forEach((cover) => {
+    if (iconSize === 'small') {
+      cover.style.width = '150px';
+      cover.style.height = '150px';
+    } else if (iconSize === 'medium') {
+      cover.style.width = '300px';
+      cover.style.height = '300px';
+    } else if (iconSize === 'large') {
+      cover.style.width = '450px';
+      cover.style.height = '450px';
+    }
+  });
+
+  cdCards.forEach((card) => {
+    if (iconSize === 'small') {
+      card.style.width = '170px';
+    } else if (iconSize === 'medium') {
+      card.style.width = '320px';
+    } else if (iconSize === 'large') {
+      card.style.width = '470px';
+    }
+  });
+});
+
+document.getElementById('viewMode').addEventListener('change', (e) => {
+  const viewMode = e.target.value;
+  const cdList = document.getElementById('cdList');
+  const iconSizeDropdown = document.getElementById('iconSize');
+
+  if (viewMode === 'list') {
+    cdList.classList.add('listView');
+    iconSizeDropdown.style.display = 'none';
+  } else {
+    cdList.classList.remove('listView');
+    iconSizeDropdown.style.display = 'block';
+  }
+});
+
+document.getElementById('menuToggle').addEventListener('click', () => {
+  const menuContent = document.getElementById('dropdownMenu');
+  menuContent.classList.toggle('show');
+});
