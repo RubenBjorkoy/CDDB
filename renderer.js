@@ -15,7 +15,7 @@ function fetchAndDisplayCDs(sortBy = 'artist', ascending = true, filter = '') {
   currentSortBy = sortBy;
   currentAscending = ascending;
 
-  window.electronAPI.executeQuery('SELECT * FROM CDs')
+  window.api.getCDs()
     .then((results) => {
       allCDs = results;
       const filteredCDs = filterCDs(allCDs, filter);
@@ -116,7 +116,7 @@ document.getElementById('addCDForm').addEventListener('submit', (e) => {
   const location = document.getElementById('newLocation').value;
   const position = document.getElementById('newPosition').value;
 
-  window.electronAPI.addCD({ album, artist, year, location, position })
+  window.api.addCD({ album, artist, year, location, position })
     .then(() => {
       document.getElementById('addModal').style.display = 'none';
       window.location.reload();
@@ -137,42 +137,46 @@ function openEditModal(id, album, artist, year, location, position) {
   document.getElementById('infoLocation').innerText = location;
   document.getElementById('infoPosition').innerText = position;
 
-  window.electronAPI.getEnv('LASTFM_API_KEY').then((apiKey) => {
-    fetch(`http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${apiKey}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}&format=json`)
-    .then((response) => response.json())
-    .then((data) => {
-      const albumInfo = data.album;
+  const apiKey = window.LASTFM_API_KEY;
+  fetch(
+    `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${apiKey}&artist=${encodeURIComponent(
+      artist
+    )}&album=${encodeURIComponent(album)}&format=json`
+  )
+  .then((response) => response.json())
+  .then((data) => {
+    const albumInfo = data.album;
 
-      if (albumInfo) {
-        const albumImage = albumInfo.image.find((img) => img.size === 'mega')?.['#text'] || '';
-        document.getElementById('infoApiData').innerHTML = `
-          <img src="${albumImage}" alt="${album}" style="width: 100%; border-radius: 10px; margin-bottom: 15px;" />
-        `;
+    if (albumInfo) {
+      const albumImage = albumInfo.image.find((img) => img.size === 'mega')?.['#text'] || '';
+      document.getElementById('infoApiData').innerHTML = `
+        <img src="${albumImage}" alt="${album}" style="width: 100%; border-radius: 10px; margin-bottom: 15px;" />
+      `;
 
-        const wikiSummary = albumInfo.wiki?.summary || 'No description available.';
-        document.getElementById('infoApiData').innerHTML += `
-          <p><strong>Description:</strong> ${wikiSummary}</p>
-        `;
+      const wikiSummary = albumInfo.wiki?.summary || 'No description available.';
+      document.getElementById('infoApiData').innerHTML += `
+        <p><strong>Description:</strong> ${wikiSummary}</p>
+      `;
 
-        const tracklist = albumInfo.tracks?.track
-          .map((track, index) => {
-            return `<li><a href="${track.url}" target="_blank">${track.name}</a> (${formatDuration(track.duration)})</li>`;
-          })
-          .join('') || '<li>No tracks available.</li>';
+      const tracklist = albumInfo.tracks?.track
+        .map((track, index) => {
+          return `<li><a href="${track.url}" target="_blank">${track.name}</a> (${formatDuration(track.duration)})</li>`;
+        })
+        .join('') || '<li>No tracks available.</li>';
 
-        document.getElementById('infoApiData').innerHTML += `
-          <p><strong>Tracklist:</strong></p>
-          <ol>${tracklist}</ol>
-        `;
-      } else {
-        document.getElementById('infoApiData').innerHTML = '<p>No additional info available from API.</p>';
-      }
-    })
-    .catch((error) => {
-      console.error('Error fetching additional info:', error);
-      document.getElementById('infoApiData').innerText = 'Failed to fetch additional info.';
-    });
+      document.getElementById('infoApiData').innerHTML += `
+        <p><strong>Tracklist:</strong></p>
+        <ol>${tracklist}</ol>
+      `;
+    } else {
+      document.getElementById('infoApiData').innerHTML = '<p>No additional info available from API.</p>';
+    }
   })
+  .catch((error) => {
+    console.error('Error fetching additional info:', error);
+    document.getElementById('infoApiData').innerText = 'Failed to fetch additional info.';
+  });
+  
 
   document.getElementById('editButton').onclick = () => {
     document.getElementById('cdInfoSection').style.display = 'none';
@@ -213,7 +217,7 @@ document.getElementById('editCDForm').addEventListener('submit', (e) => {
   const location = document.getElementById('editLocation').value;
   const position = document.getElementById('editPosition').value;
 
-  window.electronAPI.updateCD({ id, album, artist, year, location, position })
+  window.api.updateCD({ id, album, artist, year, location, position })
     .then(() => {
         document.getElementById('editModal').style.display = 'none';
         window.location.reload();
@@ -225,7 +229,7 @@ document.getElementById('deleteCDButton').addEventListener('click', () => {
   const id = document.getElementById('editId').value;
   const confirmation = confirm('Are you sure you want to delete this CD?');
   if (!confirmation) return;
-  window.electronAPI.deleteCD(id)
+  window.api.deleteCD(id)
     .then(() => {
       document.getElementById('editModal').style.display = 'none';
       window.location.reload();
@@ -234,30 +238,29 @@ document.getElementById('deleteCDButton').addEventListener('click', () => {
 });
 
 function loadAlbumCover(album, artist, cardId) {
-  window.electronAPI.getEnv('LASTFM_API_KEY').then((apiKey) => {
-    fetch(
-      `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${apiKey}&artist=${encodeURIComponent(
-        artist
-      )}&album=${encodeURIComponent(album)}&format=json`
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const albumInfo = data.album;
+  const apiKey = window.LASTFM_API_KEY;
 
-        if (albumInfo) {
-          const albumImage =
-            albumInfo.image.find((img) => img.size === 'mega')?.['#text'] || '';
-          const albumCoverElement = document.getElementById(`albumCover-${cardId}`);
-          if (albumCoverElement) {
-            albumCoverElement.src = albumImage;
-            albumCoverElement.alt = `Album cover for ${album}`;
-          }
+  fetch(
+    `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${apiKey}&artist=${encodeURIComponent(
+      artist
+    )}&album=${encodeURIComponent(album)}&format=json`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      const albumInfo = data.album;
+      if (albumInfo) {
+        const albumImage =
+          albumInfo.image.find((img) => img.size === 'mega')?.['#text'] || '';
+        const albumCoverElement = document.getElementById(`albumCover-${cardId}`);
+        if (albumCoverElement) {
+          albumCoverElement.src = albumImage;
+          albumCoverElement.alt = `Album cover for ${album}`;
         }
-      })
-      .catch((error) => {
-        console.error(`Error fetching album cover for ${album}:`, error);
-      });
-  });
+      }
+    })
+    .catch((error) => {
+      console.error(`Error fetching album cover for ${album}:`, error);
+    });
 }
 
 document.getElementById('iconSize').addEventListener('change', (e) => {
