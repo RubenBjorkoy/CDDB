@@ -1,106 +1,88 @@
-// server.js
 require('dotenv').config();
 
 const express = require('express');
-const mysql = require('mysql');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// MySQL connection
-const connection = mysql.createConnection({
-  host:     process.env.DB_HOST,
-  user:     process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
-
-connection.connect((err) => {
+const db = new sqlite3.Database(path.resolve(__dirname, '../../db/CDDB.db'), (err) => {
   if (err) {
-    console.error('Error connecting to MySQL:', err);
+    console.error('Error opening SQLite database:', err.message);
     process.exit(1);
   }
-  console.log('Connected to MySQL');
+  console.log('Connected to SQLite database');
 });
 
-// Middleware
-app.use(cors());          // allow your frontend origin
-app.use(express.json());  // parse JSON bodies
+app.use(cors());
+app.use(express.json());
 
-// Routes matching your previous IPC handlers
 app.get('/cds', (req, res) => {
-  const query = 'SELECT * FROM CDs';
-  connection.query(query, (error, results) => {
-    if (error) {
-      console.error('Error fetching CDs:', error);
+  db.all('SELECT * FROM CDs', [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching CDs:', err.message);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.json(results);
+    res.json(rows);
   });
 });
 
 app.post('/cds', (req, res) => {
   const { album, artist, year, location, position } = req.body;
-  const query =
-    'INSERT INTO CDs (album, artist, year, location, position) VALUES (?, ?, ?, ?, ?)';
-  connection.query(
-    query,
-    [album, artist, year, location, position],
-    (error, results) => {
-      if (error) {
-        console.error('Error adding CD:', error);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.status(201).json({ id: results.insertId });
-    },
-  );
+  const query = `
+    INSERT INTO CDs (album, artist, year, location, position)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  db.run(query, [album, artist, year, location, position], function (err) {
+    if (err) {
+      console.error('Error adding CD:', err.message);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ id: this.lastID });
+  });
 });
 
 app.put('/cds/:id', (req, res) => {
   const { id } = req.params;
   const { album, artist, year, location, position } = req.body;
-  const query =
-    'UPDATE CDs SET album = ?, artist = ?, year = ?, location = ?, position = ? WHERE id = ?';
-  connection.query(
-    query,
-    [album, artist, year, location, position, id],
-    (error, results) => {
-      if (error) {
-        console.error('Error updating CD:', error);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json({ affectedRows: results.affectedRows });
-    },
-  );
+  const query = `
+    UPDATE CDs SET album = ?, artist = ?, year = ?, location = ?, position = ?
+    WHERE id = ?
+  `;
+  db.run(query, [album, artist, year, location, position, id], function (err) {
+    if (err) {
+      console.error('Error updating CD:', err.message);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json({ affectedRows: this.changes });
+  });
 });
 
 app.delete('/cds/:id', (req, res) => {
   const { id } = req.params;
-  const query = 'DELETE FROM CDs WHERE id = ?';
-  connection.query(query, [id], (error, results) => {
-    if (error) {
-      console.error('Error deleting CD:', error);
+  db.run('DELETE FROM CDs WHERE id = ?', [id], function (err) {
+    if (err) {
+      console.error('Error deleting CD:', err.message);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.json({ affectedRows: results.affectedRows });
+    res.json({ affectedRows: this.changes });
   });
 });
 
-// Optional: expose Last.fm key via backend instead of directly in frontend
 app.get('/config/lastfm-key', (req, res) => {
   res.json({ lastfmApiKey: process.env.LASTFM_API_KEY || '' });
 });
 
-// Start server
 app.listen(port, () => {
   console.log(`API server listening on http://localhost:${port}`);
 });
 
-// Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down...');
-  connection.end(() => {
+  db.close(() => {
+    console.log('SQLite database closed.');
     process.exit(0);
   });
 });
