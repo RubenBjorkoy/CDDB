@@ -16,7 +16,10 @@ const db = new sqlite3.Database(path.resolve(__dirname, '../../db/CDDB.db'), (er
   console.log('Connected to SQLite database');
 });
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://192.168.1.43:8000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(express.json());
 
 app.get('/cds', (req, res) => {
