@@ -6,7 +6,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 const db = new sqlite3.Database(path.resolve(__dirname, '../../db/CDDB.db'), (err) => {
   if (err) {
@@ -17,9 +17,11 @@ const db = new sqlite3.Database(path.resolve(__dirname, '../../db/CDDB.db'), (er
 });
 
 app.use(cors({
-  origin: 'http://192.168.1.43:8000',
+  //origin: 'http://192.168.1.43:8000', 
+  origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
+
 app.use(express.json());
 
 app.get('/cds', (req, res) => {
@@ -79,7 +81,7 @@ app.get('/config/lastfm-key', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`API server listening on http://localhost:${port}`);
+  console.log(`API server listening on http://192.168.1.43:${port}`);
 });
 
 process.on('SIGINT', () => {
