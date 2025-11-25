@@ -78,7 +78,7 @@ app.get('/config/lastfm-key', (req, res) => {
   res.json({ lastfmApiKey: process.env.LASTFM_API_KEY || '' });
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`API server listening on http://localhost:${port}`);
 });
 
